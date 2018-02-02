@@ -1,19 +1,22 @@
-import json
-import base64
-
-import requests
+import sys
 
 import core
+import peer
 
 
 if __name__ == '__main__':
+    if len(sys.argv) == 1:
+        print('$ mining.py [server address]', file=sys.stderr)
+        sys.exit(1)
+
     user = core.User.generate()
     print('user generated')
     print(user.public_pem)
 
+    client = peer.Client()
+
     while True:
-        resp = requests.get('http://localhost:54321/block/-1')
-        leaf = core.Block.from_json(resp.text)
+        leaf = client.get_block(sys.argv[1], -1)
 
         print('leaf got: index={} parent-signature={}'.format(
             leaf.index,
@@ -26,17 +29,7 @@ if __name__ == '__main__':
 
             next_ = leaf.close(user, key)
 
-            data = json.dumps({
-                'user': user.public_pem,
-                'key': base64.b64encode(key).decode('ascii'),
-                'timestamp': leaf.timestamp,
-                'signature': base64.b64encode(leaf.signature).decode('ascii'),
-            }).encode('ascii')
-            header = {'Content-Type': 'application/json'}
-
-            requests.post('http://localhost:54321/block',
-                          data=data,
-                          headers=header)
+            client.post_close_block(sys.argv[1], leaf)
 
             print('yeah!  index={} signature={}'.format(
                 leaf.index,

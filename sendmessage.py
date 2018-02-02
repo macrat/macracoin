@@ -1,27 +1,21 @@
 import sys
 
-import requests
-
 import core
+import peer
 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 1:
-        print('./sendmessage.py [message]', file=sys.stderr)
+    if len(sys.argv) <= 2:
+        print('./sendmessage.py [server address] [message]', file=sys.stderr)
         sys.exit(1)
 
     user = core.User.generate()
     print('user generated')
     print(user.public_pem)
 
-    message = core.Message(user, 'messaging', sys.argv[1])
-    headers = {
-        'Content-Type': 'application/json',
-    }
+    message = core.Message(user, 'messaging', sys.argv[2])
 
-    requests.post('http://localhost:54321/message',
-                  data=message.as_json().encode('ascii'),
-                  headers=headers)
+    peer.Client().post_message(sys.argv[1], message)
 
-    print('sent message')
+    print('sent message to {}'.format(sys.argv[1]))
     print(message.as_json())

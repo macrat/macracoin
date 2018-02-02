@@ -5,7 +5,7 @@ from core.block import Block, BlockNotClosedError
 from core.user import User
 
 
-class Chain(typing.Iterable[Block]):
+class Chain(typing.Iterable[Block], typing.Sized):
     """ The block chain.
 
 
