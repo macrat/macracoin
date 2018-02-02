@@ -6,6 +6,8 @@ from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_PSS
 from Crypto.Util import randpool
 
+from core import errors
+
 
 def _serialize(message: typing.Any) -> bytes:
     return json.dumps(
@@ -42,7 +44,7 @@ class User:
     >>> u_pub.sign('foo bar')
     Traceback (most recent call last):
         ...
-    user.NoPrivateKeyError
+    core.errors.NoPrivateKeyError
     """
 
     def __init__(self, key: RSA._RSAobj) -> None:
@@ -58,7 +60,7 @@ class User:
 
     def sign_raw(self, data: bytes) -> bytes:
         if not self.key.has_private():
-            raise NoPrivateKeyError()
+            raise errors.NoPrivateKeyError()
 
         h = SHA256.new()
         h.update(data)
@@ -83,7 +85,3 @@ class User:
     @property
     def public_pem(self) -> str:
         return self.key.publickey().exportKey().decode('ascii')
-
-
-class NoPrivateKeyError(ValueError):
-    pass

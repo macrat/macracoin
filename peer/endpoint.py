@@ -64,7 +64,7 @@ class BlockResource(BaseResource):
         if ok:
             resp.status = falcon.HTTP_201
         else:
-            resp.status = falcon.HTTP_401
+            resp.status = falcon.HTTP_400
 
 
 class SingleBlockResource(BaseResource):

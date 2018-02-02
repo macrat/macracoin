@@ -2,6 +2,7 @@ import base64
 import json
 import typing
 
+from core import errors
 from core.user import User
 
 
@@ -33,7 +34,7 @@ class Message:
     >>> Message(m.user, 'my.space', 'foobar', 'invalid signature')
     Traceback (most recent call last):
         ...
-    message.InvalidSignatureError
+    core.errors.InvalidSignatureError
     """
 
     def __init__(self,
@@ -55,7 +56,7 @@ class Message:
             self.signature = signature
 
             if not self.verify():
-                raise InvalidSignatureError()
+                raise errors.InvalidSignatureError()
 
     def verify(self) -> bool:
         """ Verify signature. """
@@ -96,7 +97,3 @@ class Message:
         """ Deserialize from json. """
 
         return cls.from_dict(json.loads(data))
-
-
-class InvalidSignatureError(ValueError):
-    pass

@@ -1,10 +1,6 @@
-from core.block import (
-    Block, mining,
-    InvalidKeyError, BlockAlreadyClosedError, BlockNotClosedError,
-)
+from core.block import Block, mining
+from core.chain import Chain
+from core.message import Message
+from core.user import User
 
-from core.chain import Chain, InvalidChainError
-
-from core.message import Message, InvalidSignatureError
-
-from core.user import User, NoPrivateKeyError
+from core.errors import *

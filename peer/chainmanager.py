@@ -47,19 +47,13 @@ class ChainManager:
                     signature: bytes,
                     host: str = None) -> bool:
 
-        self.chain[-1].closer = closer
-        self.chain[-1].timestamp = timestamp
-        self.chain[-1].key = key
-        self.chain[-1].signature = signature
-
-        if not self.chain[-1].verify():
-            self.chain[-1].timestamp = None
-            self.chain[-1].key = None
-            self.chain[-1].closer = None
-            self.chain[-1].signature = None
+        try:
+            next_ = self.chain[-1].close(closer, key, timestamp, signature)
+        except Exception as e:
+            print(e)
             return False
 
-        self.add_block(core.Block(self.chain[-1]), host)
+        self.add_block(next_, host)
 
         return True
 

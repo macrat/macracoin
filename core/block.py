@@ -6,6 +6,7 @@ import typing
 
 from Crypto.Util import randpool
 
+from core import errors
 from core.message import Message
 from core.user import User
 
@@ -165,11 +166,11 @@ class Block():
         >>> root.pool(message)
         Traceback (most recent call last):
             ...
-        block.BlockAlreadyClosedError
+        core.errors.BlockAlreadyClosedError
         """
 
         if self.is_closed():
-            raise BlockAlreadyClosedError()
+            raise errors.BlockAlreadyClosedError()
 
         self.messages.append(message)
 
@@ -191,11 +192,11 @@ class Block():
         >>> Block(root).verify()
         Traceback (most recent call last):
             ...
-        block.BlockNotClosedError
+        core.errors.BlockNotClosedError
         """
 
         if not self.is_closed():
-            raise BlockNotClosedError()
+            raise errors.BlockNotClosedError()
 
         sign_correct = self.closer.verify_raw(
             self.timestamp.to_bytes(8, 'big') + self.key,
@@ -233,7 +234,12 @@ class Block():
 
         return hash_.endswith(self.magicnumber)
 
-    def close(self, user: User, key: bytes) -> 'Block':
+    def close(self,
+              user: User,
+              key: bytes,
+              timestamp: int = None,
+              signature: bytes = None) -> 'Block':
+
         """ Close this block and create next block.
 
 
@@ -245,19 +251,31 @@ class Block():
         >>> root.close(User.generate(), b'hello')
         Traceback (most recent call last):
             ...
-        block.BlockAlreadyClosedError
+        core.errors.BlockAlreadyClosedError
         """
 
         if self.is_closed():
-            raise BlockAlreadyClosedError()
+            raise errors.BlockAlreadyClosedError()
 
         if not self.verify_key(key):
-            raise InvalidKeyError()
+            raise errors.InvalidKeyError()
 
-        self.timestamp = int(time.time() * 1000)
+        if timestamp is None:
+            timestamp = int(time.time() * 1000)
+
+        if signature is not None:
+            if not user.verify_raw(timestamp.to_bytes(8, 'big') + key,
+                                   signature):
+                raise errors.InvalidSignatureError()
+            self.signature = signature
+        else:
+            self.signature = user.sign_raw(
+                timestamp.to_bytes(8, 'big') + key
+            )
+
+        self.timestamp = timestamp
         self.key = key
         self.closer = user
-        self.signature = user.sign_raw(self.timestamp.to_bytes(8, 'big') + key)
 
         return Block(self)
 
@@ -351,18 +369,6 @@ class Block():
         """ Deserialize from json. """
 
         return cls.from_dict(json.loads(data), magicnumber=magicnumber)
-
-
-class InvalidKeyError(ValueError):
-    pass
-
-
-class BlockAlreadyClosedError(Exception):
-    pass
-
-
-class BlockNotClosedError(Exception):
-    pass
 
 
 def mining(block: Block) -> bytes:

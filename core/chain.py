@@ -1,7 +1,8 @@
 import json
 import typing
 
-from core.block import Block, BlockNotClosedError
+from core import errors
+from core.block import Block
 from core.user import User
 
 
@@ -25,7 +26,7 @@ class Chain(typing.Iterable[Block], typing.Sized):
         self._chain = chain
 
         if not self.verify():
-            raise InvalidChainError()
+            raise errors.InvalidChainError()
 
     @classmethod
     def generate(cls, user: User, magicnumber: str = None) -> 'Chain':
@@ -98,7 +99,7 @@ class Chain(typing.Iterable[Block], typing.Sized):
             try:
                 if not block.verify():
                     return False
-            except BlockNotClosedError:
+            except errors.BlockNotClosedError:
                 return False
 
             parent = block
@@ -111,14 +112,14 @@ class Chain(typing.Iterable[Block], typing.Sized):
 
         try:
             return self[-1].verify()
-        except BlockNotClosedError:
+        except errors.BlockNotClosedError:
             return True
 
     def join(self, block: Block) -> None:
         """ Join new block. """
 
         if (block.is_root() or (block.is_closed() and not block.verify())):
-            raise InvalidChainError()
+            raise errors.InvalidChainError()
 
         leaf = self[-1]
 
@@ -135,10 +136,10 @@ class Chain(typing.Iterable[Block], typing.Sized):
             self[-1].parent = block
             self[-1].index += 1
         else:
-            raise InvalidChainError()
+            raise errors.InvalidChainError()
 
         if not self.verify():
-            raise InvalidChainError()
+            raise errors.InvalidChainError()
 
     def as_dict(self) -> typing.Tuple[dict, ...]:
         """ Convert to dictoinary for serialize. """
@@ -161,7 +162,3 @@ class Chain(typing.Iterable[Block], typing.Sized):
         """ Deserialize from json. """
 
         return cls.from_dict(json.loads(data))
-
-
-class InvalidChainError(ValueError):
-    pass
