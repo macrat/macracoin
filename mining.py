@@ -29,7 +29,15 @@ if __name__ == '__main__':
 
             next_ = leaf.close(user, key)
 
+            mining_message = core.Message(user, 'macracoin.mining', {
+                'from': leaf.signature.hex(),
+                'to': user.public_pem,
+            })
+
             client.post_close_block(sys.argv[1], leaf)
+            client.post_message(sys.argv[1], mining_message)
+
+            next_.pool(mining_message)
 
             print('yeah!  index={} signature={}'.format(
                 leaf.index,

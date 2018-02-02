@@ -58,4 +58,18 @@ class ChainManager:
         return True
 
     def add_message(self, message: core.Message) -> None:
+        if message.namespace == 'macracoin.mining':
+            if message.payload['from'] != self.chain[-2].signature.hex():
+                raise TypeError('invalid from')
+            elif message.payload['to'] != self.chain[-2].closer.public_pem:
+                raise TypeError('invalid to')
+
+            for m in self.chain[-1].messages:
+                if m.namespace == 'macracoin.mining':
+                    raise TypeError('duplicated mining')
+        elif (message.namespace == 'macracoin'
+             or message.namespace.starts_with('macracoin.')):
+
+            raise TypeError('invalid namespace')
+
         self.chain[-1].pool(message)

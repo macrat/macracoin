@@ -172,6 +172,9 @@ class Block():
         if self.is_closed():
             raise errors.BlockAlreadyClosedError()
 
+        if not message.verify():
+            raise errors.InvalidSignatureError()
+
         self.messages.append(message)
 
     def verify(self) -> bool:
