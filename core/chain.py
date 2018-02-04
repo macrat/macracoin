@@ -14,7 +14,7 @@ class Chain(typing.Iterable[Block], typing.Sized):
 
     >>> chain = Chain.generate(user, magicnumber='000')
 
-    >>> from block import mining
+    >>> from core.block import mining
     >>> len(chain)
     2
     >>> chain.join(chain[-1].close(user, mining(chain[-1])))
